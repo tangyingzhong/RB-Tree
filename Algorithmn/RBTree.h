@@ -139,9 +139,6 @@ private:
 	// Enter delete mode2: current node has only one child
 	void EnterDeleteMode2(NodeType*& pRoot, NodeType*& pNode);
 
-	// Enter delete mode3: current node has no any child
-	void EnterDeleteMode3(NodeType*& pRoot, NodeType*& pNode);
-
 	// Left rotation
 	void LeftRotation(NodeType* pNode);
 
@@ -720,7 +717,7 @@ void RBTree<T1, T2>::EnterDeleteMode1(NodeType*& pRoot, NodeType*& pNode)
 	// If the node's color is red, it is no need to fixup the tree
 	if (pNode->color == BLACK)
 	{
-		RemoveFixup(pRoot, pNode);
+		RemoveFixup(pRoot, pSuccessorChildNode);
 	}
 
 	// Delete the node
@@ -749,48 +746,34 @@ void RBTree<T1, T2>::EnterDeleteMode2(NodeType*& pRoot, NodeType*& pNode)
 	}
 
 	// Get current node's parent
-	NodeType* pParent = pRoot;
+	NodeType* pParent = pNode->pParent;
 
-	if (pNode->pParent != nullptr)
+	if (pChild!=nullptr)
 	{
-		pParent = pNode->pParent;
+		pChild->pParent = pParent;
 	}
 
 	// Change this child's parent
-	pChild->pParent = pParent;
-
-	if (pNode == pParent->pLeft)
+	if (pParent!=nullptr)
 	{
-		pParent->pLeft = pChild;
+		if (pNode == pParent->pLeft)
+		{
+			pParent->pLeft = pChild;
+		}
+		else
+		{
+			pParent->pRight = pChild;
+		}
 	}
 	else
 	{
-		pParent->pRight = pChild;
+		SetRootNode(pChild);
 	}
 
 	// If the node's color is red, it is no need to fixup the tree
 	if (pNode->color == BLACK)
 	{
-		RemoveFixup(pRoot, pNode);
-	}
-
-	// Delete the node
-	DeleteNode(pNode);
-}
-
-// Enter delete mode3: current node has no any child
-template <class T1, class T2>
-void RBTree<T1, T2>::EnterDeleteMode3(NodeType*& pRoot, NodeType*& pNode)
-{
-	if (pRoot == nullptr || pNode == nullptr)
-	{
-		return;
-	}
-
-	// If the node's color is red, it is no need to fixup the tree
-	if (pNode->color == BLACK)
-	{
-		RemoveFixup(pRoot, pNode);
+		RemoveFixup(pRoot, pChild);
 	}
 
 	// Delete the node
@@ -823,15 +806,8 @@ void RBTree<T1, T2>::Remove(NodeType* pNode)
 		return;
 	}
 
-	// Deleted node has one child
-	if (pNode->pLeft!=nullptr || pNode->pRight!=nullptr)
-	{
-		EnterDeleteMode2(pRoot, pNode);
-	}
-	else // Deleted node has no child
-	{
-		EnterDeleteMode3(pRoot, pNode);
-	}
+	// Deleted node has one or none child
+	EnterDeleteMode2(pRoot, pNode);
 }
 
 // Remove the key
